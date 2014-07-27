@@ -9,9 +9,8 @@
 
 class DbRedis
 {
-    // namespace
-    public $namespace;
-    
+    protected static $_instance = null;
+
     // handler połączenia
     public $db;
     
@@ -19,10 +18,10 @@ class DbRedis
     public $isConnecton = false;
     
     // ilość zapytań
-    public $queryCount =0;
+    public $queryCount = 0;
     
     // łączny czas zapytań
-    public $queryTime =0;
+    public $queryTime = 0;
     
     // czy włączone debugowanie zapytań
     private $_debug = false;        // ilcznik ilości i czasu zapytań
@@ -42,9 +41,7 @@ class DbRedis
         #$this->_debug = true;
         #$this->_debugQuery = true;
         
-        $this->namespace = $namespace;
-        
-        if (!isset($GLOBALS[$this->namespace])) {
+        if (is_object(self::$_instance[$namespace])) {
             throw new Exception('DbRedis: Please use method DbRedis::getInstance()');
         }
 
@@ -69,32 +66,33 @@ class DbRedis
         $default['database'] = '0';
 
         //
-        $config = $default;
+        if( !isset($config['host']) ) {
+            $config = $default;
+        }
         // 
 
         // ustalenie namespace
-        $namespace[] = 'redis_obj';
+        $namespace[] = 'dbredis_obj';
         $namespace[] = $config['host'];
         if(isset($config['database'])) {
             $namespace[] = $config['database'];
         }
         $namespace = implode('_', $namespace);
 
-        if (empty($GLOBALS[$namespace])) {
-            $GLOBALS[$namespace] = true;
-            $GLOBALS[$namespace] = new self($config, $namespace);
+        if( !is_object(self::$_instance[$namespace]) ) {
+            self::$_instance[$namespace] =  new self($config, $namespace);
         }
-        
-        return $GLOBALS[$namespace];
+        return self::$_instance[$namespace];
     }
     
 
     function __destruct()
     {
+        if($this->_debug) {
+            print_r("\n\n -- ". $this->queryCount .' req. at '. $this->queryTime .' s.');
+        }
+
         if(isset($this->isConnecton)) {
-            if($this->_debug) {
-                print_r("\n\n -- ". $this->queryCount .' req. at '. $this->queryTime .' s.');
-            }
             $this->db->close();
         }
     }
@@ -162,20 +160,16 @@ class DbRedis
     {
         $line = '';
 
-        if ( is_array($array) )
-        {
+        if ( is_array($array) ) {
             $line .= (count($array) > 2) ? ' array(' : '';
-            foreach ($array as $key => $value)
-            {
+            foreach ($array as $key => $value) {
                $line .= self::_flattenArray($value);
                if ($key == count($array)-1 && substr($line, -2) == ', ') {
                     $line = substr($line, 0, -2);
                }
             }
             $line .= (count($array) > 2) ? ') ' : '';
-        }
-        else
-        {
+        } else {
              $line = $array . ', ';
         }
         
