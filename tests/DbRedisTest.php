@@ -27,11 +27,36 @@ class DbRedisTest extends PHPUnit_Framework_TestCase
         DbRedis::getInstance(array('host'=>'failhost'));
     }
 
-
     public function setUp()
     {
         $this->redis = DbRedis::getInstance();
     }
 
+    public function providerRandomData()
+    {
+        return array(
+            array('TestSet#1', 10, 0),
+            array('TestSet#2', 10, 5),
+            array('TestSet#3', 100, 10)
+        );
+    }
+
+    /**
+     * @dataProvider providerRandomData
+     */
+    public function testSet($key, $value)
+    {
+        $result = $this->redis->set($key, $value);
+        $this->assertEquals($result, $value);
+    }
+
+    /**
+     * @dataProvider providerRandomData
+     */
+    public function testGet($key, $value)
+    {
+        $result = $this->redis->get($key);
+        $this->assertEquals($result, $value);
+    }
 }
  
