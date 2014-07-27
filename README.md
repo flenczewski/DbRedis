@@ -4,7 +4,7 @@ Redis
 Obsługa zapytań do redisa
 
 
-```
+```[php]
 // connect (def: localhost)
 $redis = DbRedis::getInstance();
 
