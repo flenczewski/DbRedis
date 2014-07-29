@@ -58,5 +58,14 @@ class DbRedisTest extends PHPUnit_Framework_TestCase
         $result = $this->redis->get($key);
         $this->assertEquals($result, $value);
     }
+
+    /**
+     * @dataProvider providerRandomData
+     */
+    public function testDel($key, $value)
+    {
+        $result = $this->redis->del($key);
+        $this->assertEquals($result, 1);
+    }
 }
  
